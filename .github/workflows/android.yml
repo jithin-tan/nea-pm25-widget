@@ -24,6 +24,10 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
+      - name: Restore map artwork
+        run: |
+          mkdir -p app/src/main/res/drawable-nodpi
+          base64 --decode assets/sg_map_widget.webp.base64 > app/src/main/res/drawable-nodpi/sg_map_widget.webp
       - name: Build debug APK
         run: gradle --no-daemon assembleDebug
       - uses: actions/upload-artifact@v4
