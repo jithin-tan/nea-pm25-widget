@@ -23,7 +23,7 @@ class PmWidget : AppWidgetProvider() {
   if (intent.action == ACTION_REFRESH) refresh(context)
  }
  companion object {
-  private const val ACTION_REFRESH = "sg.jit.neapm25.REFRESH"
+  const val ACTION_REFRESH = "sg.jit.neapm25.REFRESH"
   private val regions = listOf("north","south","east","west","central")
   fun schedule(context: Context) {
    val request=PeriodicWorkRequestBuilder<PmWorker>(15,TimeUnit.MINUTES).setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()).build()
@@ -34,21 +34,36 @@ class PmWidget : AppWidgetProvider() {
   }
   fun render(context: Context) {
    val prefs=context.getSharedPreferences("pm",Context.MODE_PRIVATE)
-   val rv=RemoteViews(context.packageName,R.layout.widget_pm)
-   val ids=listOf(R.id.north,R.id.south,R.id.east,R.id.west,R.id.central)
-   regions.forEachIndexed { i,r -> rv.setTextViewText(ids[i],if(prefs.contains(r)) prefs.getInt(r,0).toString() else "--") }
-   val stamp=prefs.getLong("stamp",0)
-   val fmt=DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneId.of("Asia/Singapore"))
-   val stale=stamp==0L || System.currentTimeMillis()-stamp>90*60*1000L
-   val label=if(stamp==0L) "No readings yet" else "${fmt.format(Instant.ofEpochMilli(stamp))} SGT" + if(stale) " · STALE" else ""
-   val err=prefs.getString("error",null)
-   rv.setTextViewText(R.id.status,"$label · µg/m³" + if(err!=null) " · Update failed" else "")
-   val intent=Intent(context,PmWidget::class.java).setAction(ACTION_REFRESH)
-   val pi=PendingIntent.getBroadcast(context,0,intent,PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-   rv.setOnClickPendingIntent(R.id.refresh,pi)
    val manager=AppWidgetManager.getInstance(context)
-   manager.updateAppWidget(ComponentName(context,PmWidget::class.java),rv)
+   for ((receiver, layout) in listOf(
+    PmWidget::class.java to R.layout.widget_pm,
+    CompactPmWidget::class.java to R.layout.widget_compact
+   )) {
+    val component=ComponentName(context,receiver)
+    if(manager.getAppWidgetIds(component).isEmpty()) continue
+    val rv=RemoteViews(context.packageName,layout)
+    val ids=listOf(R.id.north,R.id.south,R.id.east,R.id.west,R.id.central)
+    regions.forEachIndexed { i,r -> rv.setTextViewText(ids[i],if(prefs.contains(r)) prefs.getInt(r,0).toString() else "--") }
+    val stamp=prefs.getLong("stamp",0)
+    val fmt=DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneId.of("Asia/Singapore"))
+    val stale=stamp==0L || System.currentTimeMillis()-stamp>90*60*1000L
+    val label=if(stamp==0L) "No readings yet" else "${fmt.format(Instant.ofEpochMilli(stamp))} SGT" + if(stale) " · STALE" else ""
+    val err=prefs.getString("error",null)
+    rv.setTextViewText(R.id.status,"$label · µg/m³" + if(err!=null) " · Update failed" else "")
+    val intent=Intent(context,receiver).setAction(ACTION_REFRESH)
+    val pi=PendingIntent.getBroadcast(context,if(layout==R.layout.widget_pm) 1 else 2,intent,PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+    rv.setOnClickPendingIntent(R.id.refresh,pi)
+    manager.updateAppWidget(component,rv)
+   }
   }
+ }
+}
+
+class CompactPmWidget : AppWidgetProvider() {
+ override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) { PmWidget.schedule(context); PmWidget.render(context); PmWidget.refresh(context) }
+ override fun onReceive(context: Context, intent: Intent) {
+  super.onReceive(context,intent)
+  if(intent.action==PmWidget.ACTION_REFRESH) PmWidget.refresh(context)
  }
 }
 
