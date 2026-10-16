@@ -4,7 +4,7 @@
 <TextView android:id="@+id/refresh" android:layout_width="28dp" android:layout_height="23dp" android:gravity="center" android:text="↻" android:textSize="18sp" android:textColor="#B7DEFF" android:contentDescription="Refresh readings"/>
 </LinearLayout>
 <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
-<ImageView android:layout_width="match_parent" android:layout_height="match_parent" android:src="@drawable/singapore_map" android:scaleType="fitXY" android:contentDescription="Stylized Singapore map"/>
+<ImageView android:layout_width="match_parent" android:layout_height="match_parent" android:src="@drawable/singapore_map" android:scaleType="fitCenter" android:contentDescription="Stylized Singapore map"/>
 <LinearLayout android:layout_width="53dp" android:layout_height="wrap_content" android:orientation="vertical" android:gravity="center" android:layout_gravity="center_horizontal|top" android:background="@drawable/reading_bg" android:paddingTop="1dp" android:paddingBottom="1dp">
 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="North" android:textSize="7sp" android:textColor="#D5E4EF" android:includeFontPadding="false"/>
 <TextView android:id="@+id/north" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textSize="13sp" android:textStyle="bold" android:textColor="#FFFFFF" android:includeFontPadding="false"/>
